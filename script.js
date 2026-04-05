@@ -1,17 +1,14 @@
 'use strict';
 
-const LEVELS      = ['level1', 'level2', 'level3'];
-const MIN_ADVANCE = 15; // minimum cards before "leave level" button appears
+const LEVELS = ['level1', 'level2', 'level3'];
 
 const state = {
-  levelKey:     null,
-  deck:         [],
-  turnOrder:    [], // pre-shuffled player index per card (balanced random)
-  cardIdx:      0,
-  maxReached:   0,
-  flipped:      new Set(),
-  playedLevels: new Set(),
-  players:      ['Player 1', 'Player 2'],
+  levelDecks: {},   // { level1: [...], level2: [...], level3: [...] } — refilled when empty
+  currentCard: null,
+  currentLevelKey: null,
+  flipped: false,
+  turnIdx: 0,
+  players: ['Player 1', 'Player 2'],
 };
 
 // ─── Utilities ────────────────────────────────────────────────
@@ -35,9 +32,7 @@ function startGame() {
 function initNameRows() {
   const list = $('names-list');
   list.innerHTML = '';
-  ['Player 1', 'Player 2'].forEach((placeholder, i) => {
-    appendNameRow(i + 1, '');
-  });
+  [1, 2].forEach(n => appendNameRow(n, ''));
   list.querySelector('.name-input').focus();
 }
 
@@ -85,7 +80,7 @@ function submitNames() {
   state.players = Array.from(inputs).map((inp, i) =>
     inp.value.trim() || `Player ${i + 1}`
   );
-  showCategories();
+  beginGame();
 }
 
 document.addEventListener('keydown', e => {
@@ -94,168 +89,96 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ─── Categories ───────────────────────────────────────────────
+// ─── Game ─────────────────────────────────────────────────────
 
-function showCategories() {
-  const grid = $('cat-grid');
+function beginGame() {
+  // Build a shuffled deck for each level
+  LEVELS.forEach(key => {
+    state.levelDecks[key] = getDeck(key);
+  });
+  state.turnIdx = 0;
+  showScreen('screen-game');
+  startTurn();
+}
+
+// Draw from a level's deck; reshuffle when empty
+function drawCard(levelKey) {
+  if (state.levelDecks[levelKey].length === 0) {
+    state.levelDecks[levelKey] = getDeck(levelKey);
+  }
+  return state.levelDecks[levelKey].pop();
+}
+
+// ─── Turn Flow ────────────────────────────────────────────────
+
+function startTurn() {
+  const player = state.players[state.turnIdx % state.players.length];
+
+  // Build level picker
+  const grid = $('pick-grid');
   grid.innerHTML = '';
-
   LEVELS.forEach((key, i) => {
-    const level  = questions[key];
-    const name   = level.label.split(': ')[1];
-    const played = state.playedLevels.has(key);
-
-    const card = document.createElement('button');
-    card.className = `cat-card${played ? ' played' : ''}`;
-    card.onclick = () => selectCategory(key);
-    card.innerHTML = `
-      <div class="cat-card-left">
-        <span class="cat-num">Level ${String(i + 1).padStart(2, '0')}</span>
-        <span class="cat-name">${name}</span>
-      </div>
-      <span class="cat-check" aria-hidden="true">✓</span>
+    const level = questions[key];
+    const name  = level.label.split(': ')[1];
+    const btn   = document.createElement('button');
+    btn.className = 'pick-card';
+    btn.onclick   = () => pickLevel(key);
+    btn.innerHTML = `
+      <span class="cat-num">Level ${String(i + 1).padStart(2, '0')}</span>
+      <span class="cat-name">${name}</span>
     `;
-    grid.appendChild(card);
+    grid.appendChild(btn);
   });
 
-  showScreen('screen-categories');
+  $('pick-turn').textContent = `${player}'s Turn`;
+
+  $('pick-view').classList.remove('hidden');
+  $('card-view').classList.add('hidden');
 }
 
-function selectCategory(key) {
-  state.levelKey = key;
-  showTransition();
-}
+function pickLevel(key) {
+  const player = state.players[state.turnIdx % state.players.length];
+  const card   = drawCard(key);
+  const n      = LEVELS.indexOf(key) + 1;
 
-// ─── Level Transition ─────────────────────────────────────────
+  state.currentCard     = card;
+  state.currentLevelKey = key;
+  state.flipped         = false;
 
-function showTransition() {
-  const key   = state.levelKey;
-  const level = questions[key];
-  const n     = LEVELS.indexOf(key) + 1;
-
-  $('tr-eyebrow').textContent     = `Level ${String(n).padStart(2, '0')}`;
-  $('tr-title').textContent       = level.label.split(': ')[1].toUpperCase();
-  $('tr-desc').textContent        = level.description;
-  $('tr-instruction').textContent = level.instruction;
-  $('tr-begin-btn').textContent   = 'Begin';
-
-  showScreen('screen-transition');
-}
-
-// Build a balanced-random turn order: each player appears once per "round",
-// rounds are shuffled independently so no fixed cycle is apparent.
-function buildTurnOrder(deckLength, numPlayers) {
-  const order = [];
-  let pool = [];
-  while (order.length < deckLength) {
-    if (pool.length === 0) {
-      pool = shuffle([...Array(numPlayers).keys()]);
-    }
-    order.push(pool.pop());
-  }
-  return order;
-}
-
-function beginLevel() {
-  state.deck       = getDeck(state.levelKey);
-  state.turnOrder  = buildTurnOrder(state.deck.length, state.players.length);
-  state.cardIdx    = 0;
-  state.maxReached = 0;
-  state.flipped    = new Set();
-
-  renderCard(false);
-  showScreen('screen-game');
-}
-
-// ─── Card Rendering ───────────────────────────────────────────
-
-function renderCard(animate) {
-  const { deck, cardIdx, levelKey, players } = state;
-  const card  = deck[cardIdx];
-  const total = deck.length;
-  const n     = LEVELS.indexOf(levelKey) + 1;
-
-  if (cardIdx > state.maxReached) state.maxReached = cardIdx;
-
-  // Header
-  $('progress-text').textContent = `Card ${cardIdx + 1} of ${total}`;
-  $('level-chip').textContent    = `Level ${n}`;
-
-  // Turn indicator — balanced-random rotation, consistent per card index
-  const askerIdx   = state.turnOrder[cardIdx];
-  const answererIdx = state.turnOrder[(cardIdx + 1) % state.turnOrder.length];
-  const asker      = players[askerIdx];
-  const answerer   = players[answererIdx !== askerIdx ? answererIdx : (answererIdx + 1) % players.length];
-  $('turn-indicator').textContent = `${asker} asks · ${answerer} answers`;
-
-  // Card content
+  // Populate card
+  $('turn-label').textContent = player;
+  $('level-chip').textContent = `Level ${n}`;
   $('card-body').textContent  = card.text;
   $('card-label').textContent =
     card.type === 'wildcard' ? 'Wildcard' :
     card.type === 'reminder' ? 'Reminder' : '';
-
   $('card-up').className = `card-side card-up type-${card.type}`;
-  applyFlip(state.flipped.has(cardIdx), animate);
 
-  $('btn-back').disabled = cardIdx === 0;
-  $('btn-next').disabled = cardIdx >= total - 1;
-
-  refreshLeaveBtn();
-}
-
-// Apply flip state — animate=true plays CSS transition, false snaps instantly
-function applyFlip(isFlipped, animate) {
+  // Reset flip state (snap, no animation)
   const inner = $('card-inner');
-  const hint  = $('tap-hint');
+  inner.style.transition = 'none';
+  void inner.offsetWidth;
+  inner.classList.remove('flipped');
+  requestAnimationFrame(() => { inner.style.transition = ''; });
 
-  if (!animate) {
-    inner.style.transition = 'none';
-    void inner.offsetWidth;
-    inner.classList.toggle('flipped', isFlipped);
-    requestAnimationFrame(() => { inner.style.transition = ''; });
-  } else {
-    inner.classList.toggle('flipped', isFlipped);
-  }
+  $('tap-hint').classList.remove('hidden');
 
-  hint.classList.toggle('hidden', isFlipped);
+  $('pick-view').classList.add('hidden');
+  $('card-view').classList.remove('hidden');
 }
-
-function refreshLeaveBtn() {
-  const btn        = $('btn-advance');
-  const enoughSeen = state.maxReached >= MIN_ADVANCE - 1;
-  btn.classList.toggle('hidden', !enoughSeen);
-}
-
-// ─── User Interactions ────────────────────────────────────────
 
 function flipCard() {
-  const { cardIdx, flipped } = state;
-  const nowFlipped = !flipped.has(cardIdx);
-
-  if (nowFlipped) flipped.add(cardIdx);
-  else            flipped.delete(cardIdx);
-
-  applyFlip(nowFlipped, true);
+  state.flipped = !state.flipped;
+  $('card-inner').classList.toggle('flipped', state.flipped);
+  $('tap-hint').classList.toggle('hidden', state.flipped);
 }
 
-function nextCard() {
-  if (state.cardIdx < state.deck.length - 1) {
-    state.cardIdx++;
-    renderCard(false);
-  }
+function nextTurn() {
+  state.turnIdx++;
+  startTurn();
 }
 
-function prevCard() {
-  if (state.cardIdx > 0) {
-    state.cardIdx--;
-    renderCard(false);
-  }
-}
-
-function leaveLevel() {
-  state.playedLevels.add(state.levelKey);
-  showCategories();
-}
+// ─── Final Card / Restart ─────────────────────────────────────
 
 function showFinalCard() {
   $('final-body').textContent = questions.finalCard.text;
@@ -264,14 +187,12 @@ function showFinalCard() {
 
 function restartGame() {
   Object.assign(state, {
-    levelKey:     null,
-    deck:         [],
-    turnOrder:    [],
-    cardIdx:      0,
-    maxReached:   0,
-    flipped:      new Set(),
-    playedLevels: new Set(),
-    players:      ['Player 1', 'Player 2'],
+    levelDecks:      {},
+    currentCard:     null,
+    currentLevelKey: null,
+    flipped:         false,
+    turnIdx:         0,
+    players:         ['Player 1', 'Player 2'],
   });
   showScreen('screen-welcome');
 }

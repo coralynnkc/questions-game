@@ -58,17 +58,6 @@ html, body {
 }
 .btn-primary:hover { background: var(--red); }
 
-.btn-nav {
-  background: transparent;
-  color: var(--black);
-  font-size: 12px;
-  padding: 12px 0;
-  border: 1.5px solid var(--border);
-  flex: 1;
-}
-.btn-nav:hover:not(:disabled) { border-color: var(--black); }
-.btn-nav:disabled { opacity: .3; cursor: default; transform: none; }
-
 .btn-advance {
   background: var(--red);
   color: var(--white);
@@ -76,9 +65,17 @@ html, body {
   padding: 14px 0;
   width: 100%;
   letter-spacing: .14em;
-  margin-top: 10px;
+  font-weight: 600;
+  font-family: var(--sans);
+  text-transform: uppercase;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .18s ease, transform .15s ease;
 }
-.btn-advance:hover { background: var(--red-dark); }
+.btn-advance:hover  { background: var(--red-dark); }
+.btn-advance:active { transform: scale(.97); }
 
 
 /* ══════════════════════════════════════════════════════════
@@ -213,28 +210,6 @@ html, body {
 }
 .btn-add-player:hover { color: var(--black); }
 
-
-/* ══════════════════════════════════════════════════════════
-   CATEGORY SELECT SCREEN
-══════════════════════════════════════════════════════════ */
-#screen-categories {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 40px 32px;
-}
-
-.categories-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  width: 100%;
-  max-width: 420px;
-}
-
 .cat-eyebrow {
   font-size: 11px;
   font-weight: 600;
@@ -243,37 +218,70 @@ html, body {
   color: var(--muted);
 }
 
-.cat-grid {
+
+/* ══════════════════════════════════════════════════════════
+   GAME SCREEN
+══════════════════════════════════════════════════════════ */
+#screen-game {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* ── Pick View ───────────────────────────────────────────── */
+.pick-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 40px 32px;
+  gap: 20px;
+  width: 100%;
+}
+
+.pick-turn {
+  font-family: var(--serif);
+  font-size: clamp(28px, 8vw, 42px);
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--black);
+  text-align: center;
+}
+
+.pick-prompt {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.pick-grid {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  max-width: 420px;
 }
 
-.cat-card {
+.pick-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   padding: 20px 24px;
   border: 1.5px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
   background: var(--white);
-  transition: border-color .18s ease, background .18s ease, transform .15s ease;
-  text-align: left;
+  transition: border-color .18s ease, transform .15s ease;
   font-family: var(--sans);
   -webkit-tap-highlight-color: transparent;
   width: 100%;
 }
-.cat-card:hover  { border-color: var(--black); }
-.cat-card:active { transform: scale(.98); }
-.cat-card.played { background: var(--cream); }
-
-.cat-card-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.pick-card:hover  { border-color: var(--black); }
+.pick-card:active { transform: scale(.98); }
 
 .cat-num {
   font-size: 10px;
@@ -290,15 +298,6 @@ html, body {
   letter-spacing: .02em;
   color: var(--black);
 }
-
-.cat-check {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--muted);
-  opacity: 0;
-  transition: opacity .2s ease;
-}
-.cat-card.played .cat-check { opacity: 1; }
 
 .cat-final-btn {
   background: transparent;
@@ -317,76 +316,14 @@ html, body {
 }
 .cat-final-btn:hover { color: var(--black); }
 
-
-/* ══════════════════════════════════════════════════════════
-   LEVEL TRANSITION SCREEN
-══════════════════════════════════════════════════════════ */
-#screen-transition {
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 40px 32px;
-}
-
-.transition-inner {
+/* ── Card View ───────────────────────────────────────────── */
+.card-view {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  text-align: center;
-  max-width: 440px;
-}
-
-.tr-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .32em;
-  text-transform: uppercase;
-  color: var(--red);
-}
-
-.tr-title {
-  font-family: var(--serif);
-  font-size: clamp(34px, 10vw, 54px);
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  line-height: 1.1;
-}
-
-.tr-desc {
-  font-family: var(--serif);
-  font-size: 15px;
-  font-style: italic;
-  line-height: 1.7;
-  color: var(--black);
-  margin-top: 4px;
-}
-
-.tr-instruction {
-  font-size: 13px;
-  line-height: 1.65;
-  color: var(--muted);
-  font-style: italic;
-  border-left: 3px solid var(--red);
-  padding: 10px 16px;
-  text-align: left;
-  margin-top: 4px;
-}
-.tr-instruction::before { content: '\201C'; }
-.tr-instruction::after  { content: '\201D'; }
-
-
-/* ══════════════════════════════════════════════════════════
-   GAME SCREEN
-══════════════════════════════════════════════════════════ */
-#screen-game {
   flex-direction: column;
   align-items: stretch;
   min-height: 100vh;
   min-height: 100dvh;
+  width: 100%;
 }
 
 /* Header */
@@ -426,17 +363,6 @@ html, body {
   justify-content: center;
   padding: 24px 24px 16px;
   gap: 18px;
-}
-
-/* Turn Indicator */
-.turn-indicator {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  text-align: center;
-  flex-shrink: 0;
 }
 
 /* ─── Card Flip ─────────────────────────────────────────── */
@@ -564,11 +490,6 @@ html, body {
   flex-shrink: 0;
 }
 
-.nav-row {
-  display: flex;
-  gap: 10px;
-}
-
 
 /* ══════════════════════════════════════════════════════════
    FINAL CARD SCREEN
@@ -627,12 +548,6 @@ html, body {
     width: 320px;
     height: min(448px, 60vh);
   }
-
-  .nav-row {
-    justify-content: center;
-    gap: 16px;
-  }
-  .nav-row .btn-nav { max-width: 160px; flex: 0 0 160px; }
 
   .btn-advance {
     max-width: 320px;
