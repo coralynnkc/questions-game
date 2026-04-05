@@ -25,6 +25,29 @@
   </div>
 
   <!-- ══════════════════════════════
+       NAMES SCREEN
+  ══════════════════════════════ -->
+  <div id="screen-names" class="screen">
+    <div class="names-inner">
+      <p class="cat-eyebrow">Who's playing?</p>
+      <div id="names-list" class="names-list"></div>
+      <button class="btn-add-player" onclick="addPlayer()">+ Add Player</button>
+      <button class="btn btn-primary" onclick="submitNames()">Continue</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       CATEGORY SELECT SCREEN
+  ══════════════════════════════ -->
+  <div id="screen-categories" class="screen">
+    <div class="categories-inner">
+      <p class="cat-eyebrow">Choose a level</p>
+      <div class="cat-grid" id="cat-grid"></div>
+      <button class="cat-final-btn" onclick="showFinalCard()">Final Card</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
        LEVEL TRANSITION SCREEN
   ══════════════════════════════ -->
   <div id="screen-transition" class="screen">
@@ -48,6 +71,8 @@
     </header>
 
     <main class="card-stage">
+      <p class="turn-indicator" id="turn-indicator"></p>
+
       <div class="card-wrap" id="card-wrap" onclick="flipCard()">
         <div class="card-inner" id="card-inner">
 
@@ -73,8 +98,8 @@
         <button class="btn btn-nav" id="btn-back" onclick="prevCard()" disabled>← Back</button>
         <button class="btn btn-nav" id="btn-next" onclick="nextCard()">Next →</button>
       </div>
-      <button class="btn btn-advance hidden" id="btn-advance" onclick="advanceLevel()">
-        Advance to Level 2 →
+      <button class="btn btn-advance hidden" id="btn-advance" onclick="leaveLevel()">
+        Back to Categories →
       </button>
     </footer>
 
