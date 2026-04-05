@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#F7F2EA">
+  <title>We're Not Really Strangers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════
+       WELCOME SCREEN
+  ══════════════════════════════ -->
+  <div id="screen-welcome" class="screen active">
+    <div class="welcome-inner">
+      <p class="brand-eyebrow">we're not really</p>
+      <h1 class="brand-title">Strangers</h1>
+      <p class="brand-sub">A purposeful card game about deepening connections.</p>
+      <button class="btn btn-primary" onclick="startGame()">Start Game</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       LEVEL TRANSITION SCREEN
+  ══════════════════════════════ -->
+  <div id="screen-transition" class="screen">
+    <div class="transition-inner">
+      <p class="tr-eyebrow" id="tr-eyebrow">Level 01</p>
+      <h2 class="tr-title" id="tr-title">Perception</h2>
+      <p class="tr-desc" id="tr-desc"></p>
+      <blockquote class="tr-instruction" id="tr-instruction"></blockquote>
+      <button class="btn btn-primary" id="tr-begin-btn" onclick="beginLevel()">Begin</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       GAME SCREEN
+  ══════════════════════════════ -->
+  <div id="screen-game" class="screen">
+
+    <header class="game-header">
+      <span class="progress-text" id="progress-text">Card 1 of 50</span>
+      <span class="level-chip" id="level-chip">Level 1</span>
+    </header>
+
+    <main class="card-stage">
+      <div class="card-wrap" id="card-wrap" onclick="flipCard()">
+        <div class="card-inner" id="card-inner">
+
+          <!-- Face-down (decorative) side -->
+          <div class="card-side card-down">
+            <span class="card-brand-mark">WNRS</span>
+          </div>
+
+          <!-- Face-up (question) side -->
+          <div class="card-side card-up" id="card-up">
+            <span class="card-label" id="card-label"></span>
+            <p class="card-body" id="card-body"></p>
+          </div>
+
+        </div>
+      </div>
+
+      <p class="tap-hint" id="tap-hint">Tap to reveal</p>
+    </main>
+
+    <footer class="game-footer">
+      <div class="nav-row">
+        <button class="btn btn-nav" id="btn-back" onclick="prevCard()" disabled>← Back</button>
+        <button class="btn btn-nav" id="btn-next" onclick="nextCard()">Next →</button>
+      </div>
+      <button class="btn btn-advance hidden" id="btn-advance" onclick="advanceLevel()">
+        Advance to Level 2 →
+      </button>
+    </footer>
+
+  </div>
+
+  <!-- ══════════════════════════════
+       FINAL CARD SCREEN
+  ══════════════════════════════ -->
+  <div id="screen-final" class="screen">
+    <div class="final-inner">
+      <span class="final-ornament">✦</span>
+      <h2 class="final-title">Final Card</h2>
+      <p class="final-body" id="final-body"></p>
+      <button class="btn btn-primary" onclick="restartGame()">Play Again</button>
+    </div>
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
