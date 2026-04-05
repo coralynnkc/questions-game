@@ -249,6 +249,14 @@ html, body {
   text-align: center;
 }
 
+.pick-answerer {
+  font-size: 16px;
+  font-family: var(--serif);
+  font-style: italic;
+  color: var(--muted);
+  margin-top: -12px;
+}
+
 .pick-prompt {
   font-size: 11px;
   font-weight: 600;

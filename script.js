@@ -3,12 +3,12 @@
 const LEVELS = ['level1', 'level2', 'level3'];
 
 const state = {
-  levelDecks: {},   // { level1: [...], level2: [...], level3: [...] } — refilled when empty
+  levelDecks:  {},   // { level1: [...], level2: [...], level3: [...] }
   currentCard: null,
-  currentLevelKey: null,
-  flipped: false,
-  turnIdx: 0,
-  players: ['Player 1', 'Player 2'],
+  flipped:     false,
+  askerIdx:    0,
+  answererIdx: 1,
+  players:     ['Player 1', 'Player 2'],
 };
 
 // ─── Utilities ────────────────────────────────────────────────
@@ -18,6 +18,13 @@ function $(id) { return document.getElementById(id); }
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
   $(id).classList.add('active');
+}
+
+function randomOtherThan(excludeIdx, total) {
+  if (total <= 1) return excludeIdx;
+  let idx;
+  do { idx = Math.floor(Math.random() * total); } while (idx === excludeIdx);
+  return idx;
 }
 
 // ─── Welcome ──────────────────────────────────────────────────
@@ -92,16 +99,19 @@ document.addEventListener('keydown', e => {
 // ─── Game ─────────────────────────────────────────────────────
 
 function beginGame() {
-  // Build a shuffled deck for each level
   LEVELS.forEach(key => {
     state.levelDecks[key] = getDeck(key);
   });
-  state.turnIdx = 0;
+
+  // Pick a random starting pair
+  const n = state.players.length;
+  state.askerIdx    = Math.floor(Math.random() * n);
+  state.answererIdx = randomOtherThan(state.askerIdx, n);
+
   showScreen('screen-game');
   startTurn();
 }
 
-// Draw from a level's deck; reshuffle when empty
 function drawCard(levelKey) {
   if (state.levelDecks[levelKey].length === 0) {
     state.levelDecks[levelKey] = getDeck(levelKey);
@@ -112,15 +122,17 @@ function drawCard(levelKey) {
 // ─── Turn Flow ────────────────────────────────────────────────
 
 function startTurn() {
-  const player = state.players[state.turnIdx % state.players.length];
+  const asker    = state.players[state.askerIdx];
+  const answerer = state.players[state.answererIdx];
 
-  // Build level picker
+  $('pick-turn').textContent     = asker;
+  $('pick-answerer').textContent = `asks ${answerer}`;
+
   const grid = $('pick-grid');
   grid.innerHTML = '';
   LEVELS.forEach((key, i) => {
-    const level = questions[key];
-    const name  = level.label.split(': ')[1];
-    const btn   = document.createElement('button');
+    const name = questions[key].label.split(': ')[1];
+    const btn  = document.createElement('button');
     btn.className = 'pick-card';
     btn.onclick   = () => pickLevel(key);
     btn.innerHTML = `
@@ -130,23 +142,20 @@ function startTurn() {
     grid.appendChild(btn);
   });
 
-  $('pick-turn').textContent = `${player}'s Turn`;
-
   $('pick-view').classList.remove('hidden');
   $('card-view').classList.add('hidden');
 }
 
 function pickLevel(key) {
-  const player = state.players[state.turnIdx % state.players.length];
-  const card   = drawCard(key);
-  const n      = LEVELS.indexOf(key) + 1;
+  const asker    = state.players[state.askerIdx];
+  const answerer = state.players[state.answererIdx];
+  const card     = drawCard(key);
+  const n        = LEVELS.indexOf(key) + 1;
 
-  state.currentCard     = card;
-  state.currentLevelKey = key;
-  state.flipped         = false;
+  state.currentCard = card;
+  state.flipped     = false;
 
-  // Populate card
-  $('turn-label').textContent = player;
+  $('turn-label').textContent = `${asker} → ${answerer}`;
   $('level-chip').textContent = `Level ${n}`;
   $('card-body').textContent  = card.text;
   $('card-label').textContent =
@@ -154,7 +163,6 @@ function pickLevel(key) {
     card.type === 'reminder' ? 'Reminder' : '';
   $('card-up').className = `card-side card-up type-${card.type}`;
 
-  // Reset flip state (snap, no animation)
   const inner = $('card-inner');
   inner.style.transition = 'none';
   void inner.offsetWidth;
@@ -174,7 +182,13 @@ function flipCard() {
 }
 
 function nextTurn() {
-  state.turnIdx++;
+  // Answerer becomes the new asker; pick a new random answerer (not the new asker)
+  const newAskerIdx    = state.answererIdx;
+  const newAnswererIdx = randomOtherThan(newAskerIdx, state.players.length);
+
+  state.askerIdx    = newAskerIdx;
+  state.answererIdx = newAnswererIdx;
+
   startTurn();
 }
 
@@ -187,12 +201,12 @@ function showFinalCard() {
 
 function restartGame() {
   Object.assign(state, {
-    levelDecks:      {},
-    currentCard:     null,
-    currentLevelKey: null,
-    flipped:         false,
-    turnIdx:         0,
-    players:         ['Player 1', 'Player 2'],
+    levelDecks:  {},
+    currentCard: null,
+    flipped:     false,
+    askerIdx:    0,
+    answererIdx: 1,
+    players:     ['Player 1', 'Player 2'],
   });
   showScreen('screen-welcome');
 }
