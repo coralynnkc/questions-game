@@ -3,12 +3,13 @@
 const LEVELS = ['level1', 'level2', 'level3'];
 
 const state = {
-  levelDecks:  {},   // { level1: [...], level2: [...], level3: [...] }
-  currentCard: null,
-  flipped:     false,
-  askerIdx:    0,
-  answererIdx: 1,
-  players:     ['Player 1', 'Player 2'],
+  levelDecks:    {},   // { level1: [...], level2: [...], level3: [...] }
+  currentCard:   null,
+  flipped:       false,
+  askerIdx:      0,
+  answererIdx:   1,
+  answererPool:  [],   // shuffled pool; everyone gets a turn before anyone repeats
+  players:       ['Player 1', 'Player 2'],
 };
 
 // ─── Utilities ────────────────────────────────────────────────
@@ -20,11 +21,18 @@ function showScreen(id) {
   $(id).classList.add('active');
 }
 
-function randomOtherThan(excludeIdx, total) {
-  if (total <= 1) return excludeIdx;
-  let idx;
-  do { idx = Math.floor(Math.random() * total); } while (idx === excludeIdx);
-  return idx;
+// Pick next answerer from a shuffled pool of everyone except the asker.
+// The pool refills only once exhausted, so each player gets a turn before anyone repeats.
+function pickAnswerer(askerIdx) {
+  // Drop the asker if they're still in the pool (asker changes turn to turn)
+  state.answererPool = state.answererPool.filter(i => i !== askerIdx);
+
+  if (state.answererPool.length === 0) {
+    const eligible = [...Array(state.players.length).keys()].filter(i => i !== askerIdx);
+    state.answererPool = shuffle(eligible);
+  }
+
+  return state.answererPool.pop();
 }
 
 // ─── Welcome ──────────────────────────────────────────────────
@@ -104,9 +112,9 @@ function beginGame() {
   });
 
   // Pick a random starting pair
-  const n = state.players.length;
-  state.askerIdx    = Math.floor(Math.random() * n);
-  state.answererIdx = randomOtherThan(state.askerIdx, n);
+  state.answererPool = [];
+  state.askerIdx     = Math.floor(Math.random() * state.players.length);
+  state.answererIdx  = pickAnswerer(state.askerIdx);
 
   showScreen('screen-game');
   startTurn();
@@ -182,12 +190,9 @@ function flipCard() {
 }
 
 function nextTurn() {
-  // Answerer becomes the new asker; pick a new random answerer (not the new asker)
-  const newAskerIdx    = state.answererIdx;
-  const newAnswererIdx = randomOtherThan(newAskerIdx, state.players.length);
-
-  state.askerIdx    = newAskerIdx;
-  state.answererIdx = newAnswererIdx;
+  // Answerer becomes the new asker; pick next answerer from the pool
+  state.askerIdx    = state.answererIdx;
+  state.answererIdx = pickAnswerer(state.askerIdx);
 
   startTurn();
 }
@@ -201,12 +206,13 @@ function showFinalCard() {
 
 function restartGame() {
   Object.assign(state, {
-    levelDecks:  {},
-    currentCard: null,
-    flipped:     false,
-    askerIdx:    0,
-    answererIdx: 1,
-    players:     ['Player 1', 'Player 2'],
+    levelDecks:   {},
+    currentCard:  null,
+    flipped:      false,
+    askerIdx:     0,
+    answererIdx:  1,
+    answererPool: [],
+    players:      ['Player 1', 'Player 2'],
   });
   showScreen('screen-welcome');
 }
