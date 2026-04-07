@@ -5,7 +5,6 @@ const LEVELS = ['level1', 'level2', 'level3'];
 const state = {
   levelDecks:    {},   // { level1: [...], level2: [...], level3: [...] }
   currentCard:   null,
-  flipped:       false,
   askerIdx:      0,
   answererIdx:   1,
   answererPool:  [],   // shuffled pool; everyone gets a turn before anyone repeats
@@ -161,7 +160,6 @@ function pickLevel(key) {
   const n        = LEVELS.indexOf(key) + 1;
 
   state.currentCard = card;
-  state.flipped     = false;
 
   $('turn-label').textContent = `${asker} → ${answerer}`;
   $('level-chip').textContent = `Level ${n}`;
@@ -171,23 +169,10 @@ function pickLevel(key) {
     card.type === 'reminder' ? 'Reminder' : '';
   $('card-up').className = `card-side card-up type-${card.type}`;
 
-  const inner = $('card-inner');
-  inner.style.transition = 'none';
-  void inner.offsetWidth;
-  inner.classList.remove('flipped');
-  requestAnimationFrame(() => { inner.style.transition = ''; });
-
-  $('tap-hint').classList.remove('hidden');
-
   $('pick-view').classList.add('hidden');
   $('card-view').classList.remove('hidden');
 }
 
-function flipCard() {
-  state.flipped = !state.flipped;
-  $('card-inner').classList.toggle('flipped', state.flipped);
-  $('tap-hint').classList.toggle('hidden', state.flipped);
-}
 
 function nextTurn() {
   // Answerer becomes the new asker; pick next answerer from the pool
@@ -208,7 +193,6 @@ function restartGame() {
   Object.assign(state, {
     levelDecks:   {},
     currentCard:  null,
-    flipped:      false,
     askerIdx:     0,
     answererIdx:  1,
     answererPool: [],
